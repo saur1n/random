@@ -20,20 +20,20 @@ titles <- 7
 txt <- 5
 lbls <- 9
 
-us.covid <- data.frame(read.csv("https://covidtracking.com/api/states/daily.csv"))
-
-top10 <- head(us.covid$state[order(us.covid$total[us.covid == 20200322], decreasing = T)], n = 10)
-
-ggplot(us.covid) +
-  geom_line(aes(x=date, y=positive, col = state))
-
-
-us.covid2 <- us.covid[,c('state','date','positive','negative','pending','hospitalized','death')]
-us.covid2 <- melt(us.covid2, id.vars = c('state','date'))
-
-ggplot(us.covid2[us.covid2$date == '20200322',]) +
-  geom_bar(aes(x = state, y = value, fill = variable),
-                 stat = 'identity', position = "stack")
+# us.covid <- data.frame(read.csv("https://covidtracking.com/api/states/daily.csv"))
+# 
+# top10 <- head(us.covid$state[order(us.covid$total[us.covid == 20200322], decreasing = T)], n = 10)
+# 
+# ggplot(us.covid) +
+#   geom_line(aes(x=date, y=positive, col = state))
+# 
+# 
+# us.covid2 <- us.covid[,c('state','date','positive','negative','pending','hospitalized','death')]
+# us.covid2 <- melt(us.covid2, id.vars = c('state','date'))
+# 
+# ggplot(us.covid2[us.covid2$date == '20200322',]) +
+#   geom_bar(aes(x = state, y = value, fill = variable),
+#                  stat = 'identity', position = "stack")
 
 
 #####
@@ -46,6 +46,8 @@ recov$status <- 'Recovered'
 
 covid <- rbind(covid, recov, death)
 
+
+##### FAB 12
 temp <- covid[covid$Country.Region %in% c('Finland','Italy','India','Nepal','Portugal','Spain','Turkey','US'),]
 temp$Country.Region <- factor(temp$Country.Region)
 
@@ -55,7 +57,7 @@ for (s in unique(temp$status)) {
     if (c == 'US') {
       fab12 <- rbind(fab12, c(Country = c, Status = s, colSums(temp[temp$status == s & 
                                                           temp$Country.Region == c, 5:(dim(temp)[2]-1)])))
-      fab12 <- rbind(fab12, c(Country = 'US-PA', Status = s, colSums(temp[temp$status == s & 
+      fab12 <- rbind(fab12, c(Country = 'US-Pennsylvania', Status = s, colSums(temp[temp$status == s & 
                                                                 temp$Country.Region == c &
                                                                 temp$Province.State == 'Pennsylvania',5:(dim(temp)[2]-1)])))
     } else {
@@ -66,7 +68,7 @@ for (s in unique(temp$status)) {
 }
 
 fab12 <- data.frame(fab12)
-fab12$Country <- factor(fab12$Country, levels = c('Finland','Italy','India','Nepal','Portugal','Spain','Turkey','US','US-PA'))
+fab12$Country <- factor(fab12$Country, levels = c('Finland','Italy','India','Nepal','Portugal','Spain','Turkey','US','US-Pennsylvania'))
 
 fab12 <- melt(fab12, id.vars = c('Country','Status'))
 fab12$variable <- as.character(fab12$variable)
@@ -89,8 +91,75 @@ ggplot(fab12) +
         legend.text = element_text(size = txt),
         strip.text = element_text(size = txt),
         legend.key.size = unit(5, "mm"))
-ggsave(sprintf("%s%s_covid.jpg",out_path,format(Sys.time(), "%Y%b%d")),
+ggsave(sprintf("%s%s_covid_fab12.jpg",out_path,format(Sys.time(), "%Y%b%d")),
        height = two.c, width = two.c, units = 'mm',
        dpi = 600)  
 
+##### EKLAVYA
+temp <- covid[covid$Country.Region %in% c('Canada','Germany','India','US'),]
+temp$Country.Region <- factor(temp$Country.Region)
 
+eklavya <- NULL
+for (s in unique(temp$status)) {
+  for (c in unique(temp$Country.Region)) {
+    if (c == 'US') {
+      eklavya <- rbind(eklavya, c(Country = c, Status = s, colSums(temp[temp$status == s & 
+                                                                          temp$Country.Region == c, 5:(dim(temp)[2]-1)])))
+      eklavya <- rbind(eklavya, c(Country = 'US-Pennsylvania', Status = s, colSums(temp[temp$status == s & 
+                                                                                temp$Country.Region == c &
+                                                                                temp$Province.State == 'Pennsylvania',5:(dim(temp)[2]-1)])))
+      eklavya <- rbind(eklavya, c(Country = 'US-California', Status = s, colSums(temp[temp$status == s & 
+                                                                                temp$Country.Region == c &
+                                                                                temp$Province.State == 'California',5:(dim(temp)[2]-1)])))
+    } else {
+      eklavya <- rbind(eklavya, c(Country = c, Status = s, colSums(temp[temp$status == s & 
+                                                                      temp$Country.Region == c,5:(dim(temp)[2]-1)])))
+    }
+  }
+}
+
+eklavya <- data.frame(eklavya)
+eklavya$Country <- factor(eklavya$Country, levels = c('Canada','Germany','India','US','US-California','US-Pennsylvania'))
+
+eklavya <- melt(eklavya, id.vars = c('Country','Status'))
+eklavya$variable <- as.character(eklavya$variable)
+eklavya$variable <- str_remove(eklavya$variable, 'X')
+eklavya$Date <- str_replace_all(eklavya$variable, "[[:punct:]]", "/")
+eklavya$Date <- as.Date(eklavya$Date, "%m/%d/%y")
+eklavya$value <- as.integer(eklavya$value)
+
+ggplot(eklavya) +
+  geom_line(aes(x = Date, y = value, col = Status),
+            lwd = 1.2) +
+  facet_wrap(.~Country, scale = 'free_y') +
+  # scale_y_log10() +
+  labs(title = 'COVID-19 in Eklavya Countries/Regions',
+       y = 'Count') +
+  theme_linedraw() +
+  theme(axis.title = element_text(size = titles),
+        axis.text = element_text(size = txt),
+        legend.title = element_text(size = titles),
+        legend.text = element_text(size = txt),
+        strip.text = element_text(size = txt),
+        legend.key.size = unit(5, "mm"))
+ggsave(sprintf("%s%s_covid_eklavya.jpg",out_path,format(Sys.time(), "%Y%b%d")),
+       height = two.c *2/3, width = two.c, units = 'mm',
+       dpi = 600) 
+
+ggplot(eklavya[eklavya$Country == 'US-Pennsylvania',]) +
+  geom_line(aes(x = Date, y = value, col = Status),
+            lwd = 1.2) +
+  facet_wrap(.~Country, scale = 'free_y') +
+  # scale_y_log10() +
+  labs(title = 'COVID-19 in Pennsylvania',
+       y = 'Count') +
+  theme_linedraw() +
+  theme(axis.title = element_text(size = titles),
+        axis.text = element_text(size = txt),
+        legend.title = element_text(size = titles),
+        legend.text = element_text(size = txt),
+        strip.text = element_text(size = txt),
+        legend.key.size = unit(5, "mm"))
+ggsave(sprintf("%s%s_covid_pa.jpg",out_path,format(Sys.time(), "%Y%b%d")),
+       height = one.c, width = one.c, units = 'mm',
+       dpi = 600) 

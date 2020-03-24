@@ -37,15 +37,15 @@ lbls <- 9
 
 
 #####
-covid <- data.frame(read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv"))
+covid <- data.frame(read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"))
 covid$status <- 'Confirmed'
-death <- data.frame(read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv"))
+death <- data.frame(read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"))
 death$status <- 'Deaths'
-recov <- data.frame(read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv"))
-recov$status <- 'Recovered'
+# recov <- data.frame(read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv"))
+# recov$status <- 'Recovered'
+# covid <- rbind(covid, recov, death)
 
-covid <- rbind(covid, recov, death)
-
+covid <- rbind(covid, death)
 
 ##### FAB 12
 temp <- covid[covid$Country.Region %in% c('Finland','Italy','India','Nepal','Portugal','Spain','Turkey','US'),]
@@ -57,9 +57,9 @@ for (s in unique(temp$status)) {
     if (c == 'US') {
       fab12 <- rbind(fab12, c(Country = c, Status = s, colSums(temp[temp$status == s & 
                                                           temp$Country.Region == c, 5:(dim(temp)[2]-1)])))
-      fab12 <- rbind(fab12, c(Country = 'US-Pennsylvania', Status = s, colSums(temp[temp$status == s & 
-                                                                temp$Country.Region == c &
-                                                                temp$Province.State == 'Pennsylvania',5:(dim(temp)[2]-1)])))
+      # fab12 <- rbind(fab12, c(Country = 'US-Pennsylvania', Status = s, colSums(temp[temp$status == s & 
+      #                                                           temp$Country.Region == c &
+      #                                                           temp$Province.State == 'Pennsylvania',5:(dim(temp)[2]-1)])))
     } else {
       fab12 <- rbind(fab12, c(Country = c, Status = s, colSums(temp[temp$status == s & 
                                                           temp$Country.Region == c,5:(dim(temp)[2]-1)])))
@@ -96,7 +96,7 @@ ggsave(sprintf("%s%s_covid_fab12.jpg",out_path,format(Sys.time(), "%Y%b%d")),
        dpi = 600)  
 
 ##### EKLAVYA
-temp <- covid[covid$Country.Region %in% c('Canada','Germany','India','US'),]
+temp <- covid[covid$Country.Region %in% c('Canada','Finland','Germany','India','Lithuania','US'),]
 temp$Country.Region <- factor(temp$Country.Region)
 
 eklavya <- NULL
@@ -105,12 +105,12 @@ for (s in unique(temp$status)) {
     if (c == 'US') {
       eklavya <- rbind(eklavya, c(Country = c, Status = s, colSums(temp[temp$status == s & 
                                                                           temp$Country.Region == c, 5:(dim(temp)[2]-1)])))
-      eklavya <- rbind(eklavya, c(Country = 'US-Pennsylvania', Status = s, colSums(temp[temp$status == s & 
-                                                                                temp$Country.Region == c &
-                                                                                temp$Province.State == 'Pennsylvania',5:(dim(temp)[2]-1)])))
-      eklavya <- rbind(eklavya, c(Country = 'US-California', Status = s, colSums(temp[temp$status == s & 
-                                                                                temp$Country.Region == c &
-                                                                                temp$Province.State == 'California',5:(dim(temp)[2]-1)])))
+      # eklavya <- rbind(eklavya, c(Country = 'US-Pennsylvania', Status = s, colSums(temp[temp$status == s & 
+      #                                                                           temp$Country.Region == c &
+      #                                                                           temp$Province.State == 'Pennsylvania',5:(dim(temp)[2]-1)])))
+      # eklavya <- rbind(eklavya, c(Country = 'US-California', Status = s, colSums(temp[temp$status == s & 
+      #                                                                           temp$Country.Region == c &
+      #                                                                           temp$Province.State == 'California',5:(dim(temp)[2]-1)])))
     } else {
       eklavya <- rbind(eklavya, c(Country = c, Status = s, colSums(temp[temp$status == s & 
                                                                       temp$Country.Region == c,5:(dim(temp)[2]-1)])))
@@ -119,7 +119,7 @@ for (s in unique(temp$status)) {
 }
 
 eklavya <- data.frame(eklavya)
-eklavya$Country <- factor(eklavya$Country, levels = c('Canada','Germany','India','US','US-California','US-Pennsylvania'))
+eklavya$Country <- factor(eklavya$Country, levels = c('Canada','Finland','Germany','India','Lithuania','US','US-California','US-Pennsylvania'))
 
 eklavya <- melt(eklavya, id.vars = c('Country','Status'))
 eklavya$variable <- as.character(eklavya$variable)
@@ -143,15 +143,33 @@ ggplot(eklavya) +
         strip.text = element_text(size = txt),
         legend.key.size = unit(5, "mm"))
 ggsave(sprintf("%s%s_covid_eklavya.jpg",out_path,format(Sys.time(), "%Y%b%d")),
-       height = two.c *2/3, width = two.c, units = 'mm',
+       height = two.c*2/3, width = two.c, units = 'mm',
        dpi = 600) 
 
-ggplot(eklavya[eklavya$Country == 'US-Pennsylvania',]) +
+# ggplot(eklavya[eklavya$Country == 'US-Pennsylvania',]) +
+#   geom_line(aes(x = Date, y = value, col = Status),
+#             lwd = 1.2) +
+#   facet_wrap(.~Country, scale = 'free_y') +
+#   # scale_y_log10() +
+#   labs(title = 'COVID-19 in Pennsylvania',
+#        y = 'Count') +
+#   theme_linedraw() +
+#   theme(axis.title = element_text(size = titles),
+#         axis.text = element_text(size = txt),
+#         legend.title = element_text(size = titles),
+#         legend.text = element_text(size = txt),
+#         strip.text = element_text(size = txt),
+#         legend.key.size = unit(5, "mm"))
+# ggsave(sprintf("%s%s_covid_pa.jpg",out_path,format(Sys.time(), "%Y%b%d")),
+#        height = one.c, width = one.c, units = 'mm',
+#        dpi = 600) 
+
+ggplot(eklavya[eklavya$Country == 'India',]) +
   geom_line(aes(x = Date, y = value, col = Status),
             lwd = 1.2) +
   facet_wrap(.~Country, scale = 'free_y') +
   # scale_y_log10() +
-  labs(title = 'COVID-19 in Pennsylvania',
+  labs(title = 'COVID-19 in India',
        y = 'Count') +
   theme_linedraw() +
   theme(axis.title = element_text(size = titles),
@@ -160,6 +178,25 @@ ggplot(eklavya[eklavya$Country == 'US-Pennsylvania',]) +
         legend.text = element_text(size = txt),
         strip.text = element_text(size = txt),
         legend.key.size = unit(5, "mm"))
-ggsave(sprintf("%s%s_covid_pa.jpg",out_path,format(Sys.time(), "%Y%b%d")),
+ggsave(sprintf("%s%s_covid_india.jpg",out_path,format(Sys.time(), "%Y%b%d")),
        height = one.c, width = one.c, units = 'mm',
+       dpi = 600) 
+
+
+ggplot(eklavya[eklavya$Country %in% c('India','US','US-California','US-Pennsylvania'),]) +
+  geom_line(aes(x = Date, y = value, col = Status),
+            lwd = 1.2) +
+  facet_wrap(.~Country, scale = 'free_y') +
+  # scale_y_log10() +
+  labs(title = 'COVID-19 in India & US',
+       y = 'Count') +
+  theme_linedraw() +
+  theme(axis.title = element_text(size = titles),
+        axis.text = element_text(size = txt),
+        legend.title = element_text(size = titles),
+        legend.text = element_text(size = txt),
+        strip.text = element_text(size = txt),
+        legend.key.size = unit(5, "mm"))
+ggsave(sprintf("%s%s_covid_india_us.jpg",out_path,format(Sys.time(), "%Y%b%d")),
+       height = one.c, width = two.c*2/3, units = 'mm',
        dpi = 600) 
